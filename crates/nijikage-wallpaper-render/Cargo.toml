@@ -1,0 +1,19 @@
+[package]
+name = "nijikage-wallpaper-render"
+version = "0.1.0-beta.1"
+edition = "2024"
+description = "GPU renderer for Nijikage-Wallpaper (disc optics, desktop effects, particles, audio ring)"
+license = "GPL-3.0-or-later"
+repository = "https://github.com/HiRo-by-ANAN/Nijikage-Wallpaper"
+publish = false
+
+[dependencies]
+bytemuck = { version = "1.24", features = ["derive"] }
+nijikage-wallpaper-core = { path = "../nijikage-wallpaper-core" }
+image = { version = "0.25.10", default-features = false, features = ["png", "jpeg", "webp", "bmp"] }
+wgpu = "24.0.5"
+
+[dev-dependencies]
+naga = { version = "24.0", features = ["wgsl-in"] }
+pollster = "0.4"
+winit = "0.30.13"

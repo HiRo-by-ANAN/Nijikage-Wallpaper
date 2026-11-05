@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Nijikage-Wallpaper MSI（WiX Toolset 3.x）。每位使用者安裝（不需要系統管理員權限）。
+  由 packaging/build-msi.ps1 傳入：
+    -dProductVersion=0.1.0   -dSourceDir=<含 nijikage-wallpaper.exe 等檔案的資料夾>   -dRepoDir=<專案根目錄>
+-->
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+
+  <Product Id="*"
+           Name="Nijikage-Wallpaper"
+           Language="1033"
+           Codepage="65001"
+           Version="$(var.ProductVersion)"
+           Manufacturer="Nijikage-Wallpaper contributors"
+           UpgradeCode="{B4D1E8A2-6C39-4F57-9A0E-1D2F7C5B8E33}">
+
+    <Package InstallerVersion="500"
+             Compressed="yes"
+             InstallScope="perUser"
+             InstallPrivileges="limited"
+             Platform="x64"
+             Description="Nijikage-Wallpaper - optical live wallpaper for Windows 11"
+             Comments="https://github.com/HiRo-by-ANAN/Nijikage-Wallpaper" />
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of Nijikage-Wallpaper is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <Condition Message="Nijikage-Wallpaper requires 64-bit Windows 10 or later (Windows 11 recommended).">
+      <![CDATA[Installed OR (VersionNT64 >= 603)]]>
+    </Condition>
+
+    <Icon Id="NijikageIcon.ico" SourceFile="$(var.RepoDir)\assets\icon.ico" />
+    <Property Id="ARPPRODUCTICON" Value="NijikageIcon.ico" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/HiRo-by-ANAN/Nijikage-Wallpaper" />
+
+    <!-- 升級或解除安裝前，結束正在執行的 Nijikage-Wallpaper（桌布程式沒有一般視窗，直接結束處理程序） -->
+    <util:CloseApplication Id="CloseWallpaper" Target="nijikage-wallpaper.exe"
+                           CloseMessage="no" RebootPrompt="no" TerminateProcess="1" />
+    <util:CloseApplication Id="CloseSettings" Target="nijikage-wallpaper-settings.exe"
+                           CloseMessage="yes" RebootPrompt="no" TerminateProcess="1" />
+
+    <!-- 解除安裝時移除「開機自啟動」登錄值（以使用者身分呼叫程式自己的 cleanup 參數，不動設定檔；必須是 deferred＋Impersonate，否則會在安裝服務的帳號下執行而改不到使用者的 HKCU） -->
+    <CustomAction Id="RemoveAutostart" Directory="INSTALLFOLDER"
+                  ExeCommand="&quot;[INSTALLFOLDER]nijikage-wallpaper.exe&quot; --cleanup"
+                  Execute="deferred" Impersonate="yes" Return="ignore" />
+    <InstallExecuteSequence>
+      <Custom Action="RemoveAutostart" Before="RemoveFiles"><![CDATA[REMOVE="ALL"]]></Custom>
+    </InstallExecuteSequence>
+
+    <!-- 授權頁 -->
+    <WixVariable Id="WixUILicenseRtf" Value="$(var.RepoDir)\packaging\wix\license.rtf" />
+    <UIRef Id="WixUI_Minimal" />
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="LocalAppDataFolder">
+        <Directory Id="ProgramsDir" Name="Programs">
+          <Directory Id="INSTALLFOLDER" Name="Nijikage-Wallpaper" />
+        </Directory>
+      </Directory>
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="StartMenuDir" Name="Nijikage-Wallpaper" />
+      </Directory>
+    </Directory>
+
+    <DirectoryRef Id="INSTALLFOLDER">
+      <Component Id="CmpWallpaper" Guid="{3B1F9D52-6A0E-4C7B-8E24-0D5A71C9E301}" Win64="yes">
+        <RegistryValue Root="HKCU" Key="Software\Nijikage-Wallpaper\Installer" Name="Wallpaper" Type="integer" Value="1" KeyPath="yes" />
+        <File Id="WallpaperExe" Source="$(var.SourceDir)\nijikage-wallpaper.exe" KeyPath="no" />
+      </Component>
+      <Component Id="CmpSettings" Guid="{9C4A27E8-1D5B-4F63-A0B9-62E8F3D1B402}" Win64="yes">
+        <RegistryValue Root="HKCU" Key="Software\Nijikage-Wallpaper\Installer" Name="Settings" Type="integer" Value="1" KeyPath="yes" />
+        <File Id="SettingsExe" Source="$(var.SourceDir)\nijikage-wallpaper-settings.exe" KeyPath="no" />
+      </Component>
+      <Component Id="CmpDocs" Guid="{58D0E6B3-72A1-4B9C-9F10-A4C3E5D7B503}" Win64="yes">
+        <RegistryValue Root="HKCU" Key="Software\Nijikage-Wallpaper\Installer" Name="Docs" Type="integer" Value="1" KeyPath="yes" />
+        <File Id="LicenseFile" Source="$(var.RepoDir)\LICENSE" Name="LICENSE.txt" KeyPath="no" />
+        <File Id="ThirdPartyFile" Source="$(var.RepoDir)\THIRD_PARTY_LICENSES.md" KeyPath="no" />
+        <File Id="ReadmeFile" Source="$(var.RepoDir)\README.en.md" Name="README.md" KeyPath="no" />
+      </Component>
+    </DirectoryRef>
+
+    <DirectoryRef Id="StartMenuDir">
+      <Component Id="CmpShortcuts" Guid="{E7A3B918-4C52-4D06-B1F7-83A9D0C6E604}" Win64="yes">
+        <Shortcut Id="ShortcutWallpaper" Name="Nijikage-Wallpaper" Description="Start the Nijikage-Wallpaper live wallpaper"
+                  Target="[INSTALLFOLDER]nijikage-wallpaper.exe" WorkingDirectory="INSTALLFOLDER" />
+        <Shortcut Id="ShortcutSettings" Name="Nijikage-Wallpaper Settings" Description="Open the Nijikage-Wallpaper settings window"
+                  Target="[INSTALLFOLDER]nijikage-wallpaper-settings.exe" WorkingDirectory="INSTALLFOLDER" />
+        <RemoveFolder Id="RemoveStartMenuDir" Directory="StartMenuDir" On="uninstall" />
+        <RemoveFolder Id="RemoveInstallDir" Directory="INSTALLFOLDER" On="uninstall" />
+        <RemoveFolder Id="RemoveProgramsDir" Directory="ProgramsDir" On="uninstall" />
+        <RegistryValue Root="HKCU" Key="Software\Nijikage-Wallpaper\Installer" Name="Shortcuts" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <Feature Id="MainFeature" Title="Nijikage-Wallpaper" Level="1">
+      <ComponentRef Id="CmpWallpaper" />
+      <ComponentRef Id="CmpSettings" />
+      <ComponentRef Id="CmpDocs" />
+      <ComponentRef Id="CmpShortcuts" />
+    </Feature>
+  </Product>
+</Wix>

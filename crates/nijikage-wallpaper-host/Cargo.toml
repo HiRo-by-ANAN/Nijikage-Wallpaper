@@ -1,0 +1,30 @@
+[package]
+name = "nijikage-wallpaper-host"
+version = "0.1.0-beta.1"
+edition = "2024"
+description = "Nijikage-Wallpaper live-wallpaper host: desktop attachment, tray, audio capture"
+license = "GPL-3.0-or-later"
+repository = "https://github.com/HiRo-by-ANAN/Nijikage-Wallpaper"
+publish = false
+
+[dependencies]
+nijikage-wallpaper-core = { version = "0.1.0-beta.1", path = "../nijikage-wallpaper-core" }
+nijikage-wallpaper-render = { version = "0.1.0-beta.1", path = "../nijikage-wallpaper-render" }
+pollster = "0.4"
+tray-icon = "0.26.1"
+wgpu = "24.0.5"
+windows = { version = "0.62.2", features = ["Win32_Foundation", "Win32_UI_WindowsAndMessaging", "Win32_UI_Shell", "Win32_System_Registry", "Win32_System_LibraryLoader", "Win32_Graphics_Gdi", "Win32_UI_HiDpi", "Win32_System_Threading", "Win32_Security", "Win32_Graphics_Dwm", "Win32_System_SystemInformation", "Win32_System_ProcessStatus", "Win32_Media_Audio", "Win32_Media_KernelStreaming", "Win32_System_Com", "Win32_System_Com_StructuredStorage", "Win32_System_Variant"] }
+winit = "0.30.13"
+
+[features]
+# 等 nijikage-wallpaper-render 實作完成後開啟，改用真正的繪製
+render = []
+# 預設開啟真正的繪製
+default = ["render"]
+
+[build-dependencies]
+embed-resource = "3.0.12"
+
+[[bin]]
+name = "nijikage-wallpaper"
+path = "src/main.rs"
