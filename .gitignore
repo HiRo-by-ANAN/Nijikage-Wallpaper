@@ -1,0 +1,21 @@
+# Rust
+/target/
+**/target/
+**/*.rs.bk
+
+# 產生的測試與示意輸出
+/docs/images/.demo-*.png
+
+# 打包輸出（由 packaging/build-msi.ps1 產生）
+/dist/
+/packaging/wix/license.rtf
+*.msi
+*.wixobj
+*.wixpdb
+
+# 編輯器與系統檔
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+.DS_Store
